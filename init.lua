@@ -198,7 +198,7 @@ end
 -- Generate the realm border.
 minetest.register_on_generated(function(minp, maxp, seed)
 	-- Check if any part of the block is in a realm.
-	local realm = b.box_to_realm(b.box.new(minp, maxp))
+	local realm = m.box_to_realm(b.box.new(minp, maxp))
 
 	-- If not within a realm, then we don't need to generate the border.
 	if not realm then
