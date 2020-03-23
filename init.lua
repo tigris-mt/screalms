@@ -187,7 +187,7 @@ end
 
 -- Checks which realm a box is colliding with. Does not support multiple collisions.
 -- Returns realm id or nil.
-function b.box_to_realm(global_box)
+function m.box_to_realm(global_box)
 	for id,realm in pairs(realms) do
 		if b.box.collide_box(realm.global_box, global_box) then
 			return id
