@@ -13,3 +13,11 @@ function screalms.check_underground(player, yunder, f)
 		f()
 	end
 end
+
+-- Default underground handling.
+function screalms.apply_underground(player)
+	screalms.check_underground(player, -100, function()
+		player:set_sky(0, "plain", {})
+		player:set_clouds{density = 0}
+	end)
+end
