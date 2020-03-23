@@ -239,5 +239,4 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	vm:write_to_map()
 end)
 
-b.dofile("spawn.lua")
 b.dofile("check_underground.lua")
