@@ -105,6 +105,7 @@ function m.register(id, def)
 
 		-- Apply client-side appearances.
 		apply_player = function(player)
+			-- When underground, don't show any sky.
 			m.check_underground(player, -100, function()
 				player:set_sky(0, "plain", {})
 				player:set_clouds{density = 0}
