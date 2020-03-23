@@ -1,6 +1,6 @@
 -- If player is underground, do <f()>.
 -- <yunder> specifies the maximum underground y coordinate.
-function aurum.realms.check_underground(player, yunder, f)
+function screalms.check_underground(player, yunder, f)
 	if player:get_pos().y > yunder then
 		return
 	end
