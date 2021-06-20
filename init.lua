@@ -3,6 +3,7 @@ screalms = m
 
 local storage = minetest.get_mod_storage()
 local realm_store = storage:get("realms") and minetest.deserialize(storage:get("realms")) or {}
+local areastore = AreaStore()
 
 -- Save modified realm_store back to storage.
 local function save()
@@ -21,6 +22,10 @@ end
 -- There must be sizable "buffer" space between realms.
 m.SPACING = 400
 
+local function global_box(corner, size)
+	return b.box.new_add(corner, size)
+end
+
 local function allocate_position(realm)
 	minetest.log("action", "Allocating position for new realm: " .. realm.id)
 
@@ -28,26 +33,11 @@ local function allocate_position(realm)
 	for x=b.WORLDA.min.x, b.WORLDA.max.x, realm.size.x + m.SPACING do
 		for z=b.WORLDA.min.z, b.WORLDA.max.z, realm.size.z + m.SPACING do
 			local corner = vector.new(x, realm.y - realm.size.y / 2, z)
-			local box = b.box.new(corner, vector.add(corner, realm.size))
+			local box = global_box(corner, realm.size)
 
-			-- Ensure within world.
-			local ok = b.box.inside_box(box, b.WORLDA.box)
-
-			if ok then
-				-- For all stored realms...
-				for _,store in pairs(realm_store) do
-					-- If this potential position collides with the stored realm.
-					local otherbox = b.box.new(store.corner, vector.add(store.corner, store.size))
-					if b.box.collide_box(box, otherbox) then
-						-- Skip this position.
-						ok = false
-						break
-					end
-				end
-			end
-
-			-- No collisions, use this position.
-			if ok then
+			-- Ensure within world and not collides with another realm.
+			if b.box.inside_box(box, b.WORLDA.box) and #b.t.keys(areastore:get_areas_in_area(box.a, box.b, true)) == 0 then
+				-- Use this position.
 				return corner
 			end
 		end
@@ -140,7 +130,10 @@ function m.register(id, def)
 	r.local_box = b.box.new(vector.multiply(r.center, -1), r.center)
 
 	-- Global bounding box.
-	r.global_box = b.box.new(r.global_corner, vector.add(r.global_corner, r.size))
+	r.global_box = global_box(r.global_corner, r.size)
+
+	-- Add realm global box to areastore.
+	areastore:insert_area(r.global_box.a, r.global_box.b, id)
 
 	minetest.log("action", ("Registered realm (%s) centered at %s, size %s"):format(id, minetest.pos_to_string(r.global_center), minetest.pos_to_string(r.size)))
 
@@ -173,20 +166,18 @@ end
 -- Checks which realm a point is in.
 -- Returns realm id or nil
 function m.pos_to_realm(global_pos)
-	for id,realm in pairs(realms) do
-		if b.box.collide_point(realm.global_box, global_pos) then
-			return id
-		end
+	local a = areastore:get_areas_for_pos(global_pos, false, true)
+	for k,v in pairs(a) do
+		return v.data
 	end
 end
 
 -- Checks which realm a box is colliding with. Does not support multiple collisions.
 -- Returns realm id or nil.
 function m.box_to_realm(global_box)
-	for id,realm in pairs(realms) do
-		if b.box.collide_box(realm.global_box, global_box) then
-			return id
-		end
+	local a = areastore:get_areas_in_area(global_box.a, global_box.b, true, false, true)
+	for k,v in pairs(a) do
+		return v.data
 	end
 end
 
